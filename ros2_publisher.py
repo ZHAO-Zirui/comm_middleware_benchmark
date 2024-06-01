@@ -1,14 +1,10 @@
 import rclpy
+import core
+import time
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
-import numpy as np
-import cv2
-import core
-import time
 from cv_bridge import CvBridge
-
-frequency = 30  # 30Hz
 
 
 class ImagePublisher(Node):
@@ -36,25 +32,39 @@ class ImagePublisher(Node):
         msg.is_bigendian = False
         msg.step = image.strides[0]
         msg.data.frombytes(image.tobytes())
-        self.publisher_.publish(msg)
-        
+        self.publisher_.publish(msg)        
         self.frame_id += 1
-        self.get_logger().info(f'Published frame {self.frame_id}')
 
 
-rclpy.init()
-image_publisher = ImagePublisher()
-time_last_frame = time.time()
-try:
-    while rclpy.ok():
-        if time.time() - time_last_frame < (1 / frequency):
-            continue
-        image_publisher.publish_image()
-
+def main():
+    frequency = 30  # 30Hz
+    log_send_count = 0
+    log_last_time = time.time()
+    next_time = time.perf_counter()
+    
+    rclpy.init()
+    image_publisher = ImagePublisher()
+    
+    try:
+        while rclpy.ok():
+            current_time = time.perf_counter()
+            if current_time < next_time:
+                time.sleep(next_time - current_time)
         
-        time_last_frame = time.time()
-except KeyboardInterrupt:
-    pass
-finally:
-    image_publisher.destroy_node()
-    rclpy.shutdown()
+            image_publisher.publish_image()
+            log_send_count += 1
+            next_time += + 1/frequency
+            
+            # print log
+            if time.time() - log_last_time >= 1:
+                image_publisher.get_logger().info(f'Published {log_count} frames in the last second')
+                log_last_time = time.time()
+                log_count = 0
+    except KeyboardInterrupt:
+        print("Goodbye!")
+    finally:
+        image_publisher.destroy_node()
+        rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
