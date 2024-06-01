@@ -50,11 +50,11 @@ def main():
             current_time = time.perf_counter()
             if current_time < next_time:
                 time.sleep(next_time - current_time)
+            next_time += + 1/frequency
         
             image_publisher.publish_image()
             log_send_count += 1
-            next_time += + 1/frequency
-            
+
             # print log
             if time.time() - log_last_time >= 1:
                 image_publisher.get_logger().info(f'Published {log_count} frames in the last second')

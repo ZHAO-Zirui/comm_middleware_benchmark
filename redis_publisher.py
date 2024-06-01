@@ -22,6 +22,7 @@ def main():
             current_time = time.perf_counter()
             if current_time < next_time:
                 time.sleep(next_time - current_time)
+            next_time += 1/frequency
             
             image = core.generate_random_image(1920, 1080)
             timestamp = core.generate_timestamp()
@@ -36,7 +37,6 @@ def main():
             r.publish(channel, data)
             frame_id += 1
             log_count += 1
-            next_time += 1/frequency
 
             # print log
             if time.time() - log_last_time >= 1:
