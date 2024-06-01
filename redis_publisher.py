@@ -19,21 +19,14 @@ try:
         image = core.generate_random_image(1920, 1080)
         timestamp = core.generate_timestamp()
         
-        image_hex = image.tobytes().hex() # 0.03s
+        # create image message
+        frame_id_bytes = frame_id.to_bytes(4, byteorder='big')
+        ts_secs = timestamp[0].to_bytes(4, byteorder='big')
+        ts_nsecs = timestamp[1].to_bytes(4, byteorder='big')
         
-        message = {
-            'type': 'image',
-            'frame_id': frame_id,
-            'timestamp': {
-                'secs': timestamp[0],
-                'nsecs': timestamp[1]
-            },
-            'data': image_hex
-        }
+        data = frame_id_bytes + ts_secs + ts_nsecs + image.tobytes()
         
-        message_json = json.dumps(message)  # 0.02s
-        
-        r.publish('camera', message_json)
+        r.publish('camera', data)
         frame_id += 1
         time_last_frame = time.time()
 
