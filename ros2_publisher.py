@@ -6,6 +6,7 @@ import numpy as np
 import cv2
 import core
 import time
+from cv_bridge import CvBridge
 
 frequency = 30  # 30Hz
 
@@ -15,16 +16,12 @@ class ImagePublisher(Node):
         super().__init__('image_publisher')
         self.publisher_ = self.create_publisher(Image, 'camera', 10)
         self.frame_id = 0
+        self.bridge = CvBridge()
 
     def publish_image(self):
         # Generate image
         image = core.generate_random_image(1920, 1080)
         timestamp = core.generate_timestamp()
-        
-        t1 = time.time()
-        image_hex = image.tobytes()
-        t2 = time.time()
-        print(f"ATime: {t2-t1}")
         
         # Create Image message
         msg = Image()
@@ -38,12 +35,7 @@ class ImagePublisher(Node):
         msg.encoding = 'bgr8'
         msg.is_bigendian = False
         msg.step = image.strides[0]
-        t1 = time.time()
-        msg.data = image_hex
-        t2 = time.time()
-        print(f"BTime: {t2-t1}")
-
-
+        msg.data.frombytes(image.tobytes())
         self.publisher_.publish(msg)
         
         self.frame_id += 1
